@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
+import re
 
 def click(event):
     """Handles button clicks."""
@@ -7,7 +8,9 @@ def click(event):
     text = event.widget.cget("text")
     if text == "=":
         try:
-            result = eval(expression)
+            # Sanitize the expression by removing leading zeros from numbers
+            sanitized_expression = re.sub(r'\b0+(\d)', r'\1', expression)
+            result = eval(sanitized_expression)
             input_var.set(result)
             expression = str(result)
             entry.config(fg="green")  # Ai zeferino, que trabalheira que isto me deu no debug. Nunca mais.

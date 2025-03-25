@@ -1,5 +1,3 @@
-# les goooo
-
 import time
 
 while True:

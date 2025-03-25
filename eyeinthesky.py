@@ -4,41 +4,32 @@ import sys
 import subprocess
 import time
 import os
+import curses
+import psutil
 
 def check_and_install_prerequisites():
-    """Check if required modules and commands are installed, and prompt to install them if missing."""
     missing = []
-
-    # Check for psutil
     try:
         import psutil
     except ImportError:
         missing.append("psutil")
-
-    # Check for curses
     try:
         import curses
     except ImportError:
-        if os.name == 'nt':  # On Windows, install windows-curses instead
+        if os.name == 'nt':
             missing.append("windows-curses")
         else:
             missing.append("curses")
-
-    # Check for sensors command (only on Linux)
-    if os.name != 'nt':  # Skip sensors check on Windows
+    if os.name != 'nt':
         try:
             subprocess.check_output(['sensors', '--version'], stderr=subprocess.STDOUT)
         except FileNotFoundError:
             missing.append("lm-sensors")
-
-    # Check for wmi (only on Windows)
     if os.name == 'nt':
         try:
             import wmi
         except ImportError:
             missing.append("wmi")
-
-    # If there are missing prerequisites, prompt the user to install them.
     if missing:
         print("The following prerequisites are missing:")
         for item in missing:
@@ -65,8 +56,7 @@ def check_and_install_prerequisites():
             sys.exit(1)
 
 def get_temperatures():
-    """Gets system temperatures."""
-    if os.name == 'nt':  # Windows-specific temperature fetching
+    if os.name == 'nt':
         try:
             import wmi
             w = wmi.WMI(namespace="root\\wmi")
@@ -84,7 +74,7 @@ def get_temperatures():
                 return {"Temperature": f"Error: {e}"}
         except Exception as e:
             return {"Temperature": f"Error: {e}"}
-    else:  # Linux-specific temperature fetching
+    else:
         temperatures = {}
         try:
             sensors_output = subprocess.check_output(['sensors']).decode('utf-8') 
@@ -100,13 +90,10 @@ def get_temperatures():
         return temperatures
 
 def get_resource_usage():
-    """Gets system resource usage."""
-    import psutil
     cpu_percent = psutil.cpu_percent(interval=0.1)
     memory_percent = psutil.virtual_memory().percent
     disk_io = psutil.disk_io_counters()
     net_io = psutil.net_io_counters()
-
     return {
         'CPU Usage': f'{cpu_percent}%',
         'Memory Usage': f'{memory_percent}%',
@@ -117,32 +104,27 @@ def get_resource_usage():
     }
 
 def get_running_processes():
-    """Gets the top 10 processes sorted by CPU usage."""
-    import psutil
     processes = []
     for proc in psutil.process_iter(['pid', 'name', 'cpu_percent', 'memory_percent']):
         try:
             processes.append(proc.info)
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             continue
-
     time.sleep(0.1)
     processes.sort(key=lambda x: x['cpu_percent'], reverse=True)
     return processes[:10]
 
-def main(stdscr):
-    """Main function to display system information using curses."""
+check_and_install_prerequisites()
+
+def run(stdscr):
     curses.curs_set(0)
     stdscr.nodelay(1)
     stdscr.timeout(1000)
-
     last_process_update = time.time()
     processes = []
-
     while True:
         stdscr.erase()
         height, width = stdscr.getmaxyx()
-
         stdscr.addstr(0, 0, "--- System Information ---")
         temperatures = get_temperatures()
         row = 1
@@ -151,7 +133,6 @@ def main(stdscr):
                 break
             stdscr.addstr(row, 0, f"{key}: {value[:width - 1]}")
             row += 1
-
         if row < height - 1:
             stdscr.addstr(row, 0, "--- Resource Usage ---")
             row += 1
@@ -161,12 +142,10 @@ def main(stdscr):
                 break
             stdscr.addstr(row, 0, f"{key}: {value[:width - 1]}")
             row += 1
-
         current_time = time.time()
         if current_time - last_process_update >= 2:
             processes = get_running_processes()
             last_process_update = current_time
-
         if row < height - 1:
             stdscr.addstr(row, 0, "--- Top Running Processes ---")
             row += 1
@@ -177,13 +156,9 @@ def main(stdscr):
                             f"CPU: {proc['cpu_percent']:.1f}%, Mem: {proc['memory_percent']:.1f}%")
             stdscr.addstr(row, 0, process_info[:width - 1])
             row += 1
-
         stdscr.refresh()
         key = stdscr.getch()
         if key == ord('q'):
             break
 
-if __name__ == "__main__":
-    check_and_install_prerequisites()
-    import curses
-    curses.wrapper(main)
+curses.wrapper(run)

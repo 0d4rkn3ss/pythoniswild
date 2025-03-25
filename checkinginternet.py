@@ -1,12 +1,9 @@
-# well shit, here we go again
-
 import socket
 import time
 
 def check_internet_connection():
-    # let's see here
     try:
-        socket.create_connection(("8.8.8.8", 53), timeout=5)  # Google's DNS
+        socket.create_connection(("8.8.8.8", 53), timeout=5)
         return True
     except OSError:
         return False

@@ -6,7 +6,6 @@ def print_board(board):
         print("-" * 5)
 
 def check_winner(board, player):
-    # Verificar linhas, colunas e diagonais
     for row in board:
         if all(s == player for s in row):
             return True

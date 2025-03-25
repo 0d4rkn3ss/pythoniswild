@@ -4,7 +4,7 @@ import time
 import os
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
+
 load_dotenv()
 
 reddit_client_id = os.getenv("REDDIT_CLIENT_ID")
@@ -24,13 +24,13 @@ reddit = praw.Reddit(
 
 def obter_facto_aleatorio_do_reddit():
     try:
-        subreddits = ["Awwducational", "DailyFacts", "interestingfacts"] 
+        subreddits = ["Awwducational", "DailyFacts", "interestingfacts"]
         subreddit = random.choice(subreddits)
-        posts = list(reddit.subreddit(subreddit).hot(limit=50)) 
+        posts = list(reddit.subreddit(subreddit).hot(limit=50))
         post = random.choice(posts)
         return post.title
     except Exception as e:
-        print(f"Error: {e}")  
+        print(f"Error: {e}")
         return None
 
 facto = obter_facto_aleatorio_do_reddit()
@@ -38,4 +38,4 @@ if facto:
     print(f"Facto de bosta: {facto}")
 else:
     print("O facto perdeu-se no caminho.")
-time.sleep(2)  # Wait for 2 seconds before exiting
+time.sleep(2)

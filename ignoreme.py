@@ -21,7 +21,7 @@ def spam_ignore_me(stdscr):
     stdscr.clear()
     setup_colors()
     positions = []
-    max_texts = 150
+    max_texts = 250
 
     while True:
         height, width = stdscr.getmaxyx()
